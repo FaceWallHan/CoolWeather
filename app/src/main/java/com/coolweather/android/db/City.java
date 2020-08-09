@@ -2,10 +2,10 @@ package com.coolweather.android.db;
 
 import org.litepal.crud.LitePalSupport;
 
-public class Province extends LitePalSupport {
+public class City extends LitePalSupport {
     private int id;
-    private String provinceName;
-    private int provinceCode;
+    private String cityName;
+    private int cityCode;
 
     public int getId() {
         return id;
@@ -15,19 +15,19 @@ public class Province extends LitePalSupport {
         this.id = id;
     }
 
-    public String getProvinceName() {
-        return provinceName;
+    public String getCityName() {
+        return cityName;
     }
 
-    public void setProvinceName(String provinceName) {
-        this.provinceName = provinceName;
+    public void setCityName(String cityName) {
+        this.cityName = cityName;
     }
 
-    public int getProvinceCode() {
-        return provinceCode;
+    public int getCityCode() {
+        return cityCode;
     }
 
-    public void setProvinceCode(int provinceCode) {
-        this.provinceCode = provinceCode;
+    public void setCityCode(int cityCode) {
+        this.cityCode = cityCode;
     }
 }

@@ -1,4 +1,6 @@
 package com.coolweather.android;
 
-public class AppClient {
+import org.litepal.LitePalApplication;
+
+public class AppClient extends LitePalApplication {
 }
