@@ -67,7 +67,7 @@ public class ChooseAreaFragment extends Fragment {
     /**
      * 当前选中的级别
      * **/
-    private int currentLevel;
+    private int currentLevel=3;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -87,15 +87,26 @@ public class ChooseAreaFragment extends Fragment {
         list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
+                if (currentLevel==LEVEL_PROVINCE){
+                    selectedProvince=provinceList.get(i);
+                    queryCities();
+                }else  if (currentLevel==LEVEL_CITY){
+                    selectedCity=cityList.get(i);
+                    queryCounties();
+                }
             }
         });
         back_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                if (currentLevel==LEVEL_COUNTY){
+                    queryCities();
+                }else  if (currentLevel==LEVEL_CITY){
+                    queryProvinces();
+                }
             }
         });
+        queryProvinces();
     }
     /**
      *查询全国所有的省，有限从数据库查询，如果没有查询到再去服务器上查询
@@ -121,8 +132,8 @@ public class ChooseAreaFragment extends Fragment {
      */
     private void queryCities(){
         title_text.setText(selectedProvince.getProvinceName());
-        back_button.setVisibility(View.GONE);
-        cityList= LitePal.where("provinceid=?",String.valueOf(selectedProvince.getId())).find(City.class);
+        back_button.setVisibility(View.VISIBLE);
+        cityList= LitePal.where("provinceId=?",String.valueOf(selectedProvince.getProvinceCode())).find(City.class);
         if (cityList.size()>0){
             dataList.clear();
             for (City city : cityList) {
@@ -138,7 +149,25 @@ public class ChooseAreaFragment extends Fragment {
     /**
      *查询全国所有的县，有限从数据库查询，如果没有查询到再去服务器上查询
      */
-    private void queryCounties(){}
+    private void queryCounties(){
+        title_text.setText(selectedCity.getCityName());
+        back_button.setVisibility(View.VISIBLE);
+        countyList= LitePal.where("cityId=?",String.valueOf(selectedCity.getCityCode())).find(County.class);
+        if (countyList.size()>0){
+            dataList.clear();
+            for (County county : countyList) {
+                dataList.add(county.getCountyName());
+            }
+            arrayAdapter.notifyDataSetChanged();
+            list_view.setSelection(0);
+            currentLevel=LEVEL_COUNTY;
+        }else {
+            int cityCode=selectedCity.getCityCode();
+            int provinceCode=selectedProvince.getProvinceCode();
+            String address="china/"+provinceCode+"/"+cityCode;
+            queryFromServer(address,"county");
+        }
+    }
     /**
      * 根据传入的地址和类型从服务器上查询省市县数据
      * **/
@@ -168,10 +197,10 @@ public class ChooseAreaFragment extends Fragment {
                         result= Utility.handleProvinceResponse(responseText);
                         break;
                     case city:
-                        result= Utility.handleCityResponse(responseText,selectedProvince.getId());
+                        result= Utility.handleCityResponse(responseText,selectedProvince.getProvinceCode());
                         break;
                     case county:
-                        result= Utility.handleCountyResponse(responseText,selectedCity.getId());
+                        result= Utility.handleCountyResponse(responseText,selectedCity.getCityCode());
                         break;
                 }
                 if (result){
@@ -201,11 +230,17 @@ public class ChooseAreaFragment extends Fragment {
      * **/
     private void showProgressDialog(){
         if (progressDialog==null){
-            progressDialog=new ProgressDialog(AppClient.getContext());
+            progressDialog=new ProgressDialog(getActivity());
+            /**
+             *不能使用getApplicationContext()获得的Context,而必须使用Activity,因为只有一个Activity才能添加一个窗体。
+             * **/
             progressDialog.setMessage("loading...");
             progressDialog.setCanceledOnTouchOutside(false);
         }
-        progressDialog.show();
+        if (progressDialog!=null){
+            progressDialog.show();
+        }
+
     }
     /**
      * 关闭进度对话框
