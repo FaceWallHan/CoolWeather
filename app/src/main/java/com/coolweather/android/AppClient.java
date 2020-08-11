@@ -18,6 +18,28 @@ public class AppClient extends LitePalApplication {
         preferences=getSharedPreferences("data",MODE_PRIVATE);
     }
 
+    public String getBingPic() {
+        return preferences.getString("bingPic",null);
+    }
+
+    public void setBingPic(String bingPic) {
+        @SuppressLint("CommitPrefEdits")
+        SharedPreferences.Editor editor=preferences.edit();
+        editor.putString("bingPic",bingPic);
+        editor.apply();
+    }
+
+    public String getWeather() {
+        return preferences.getString("weather",null);
+    }
+
+    public void setWeather(String weather) {
+        @SuppressLint("CommitPrefEdits")
+        SharedPreferences.Editor editor=preferences.edit();
+        editor.putString("weather",weather);
+        editor.apply();
+    }
+
     public static Context getContext() {
         return context;
     }
