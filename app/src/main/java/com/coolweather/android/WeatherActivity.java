@@ -5,6 +5,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -13,6 +14,9 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
 import com.coolweather.android.gson.Forecast;
@@ -36,11 +40,16 @@ public class WeatherActivity extends AppCompatActivity {
     private TextView aqi_text,pm25_text,comfort_text,car_wash_text,sport_text;
     private AppClient appClient;
     private ImageView bing_pic_img;
+    public SwipeRefreshLayout swipe_refresh;
+    private String mWeatherId;
+    public DrawerLayout drawer_layout;
+    private Button nav_button;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.weather_activity);
         inView();
+        setListener();
         DisplayData();
         DisplayPic();
     }
@@ -58,6 +67,24 @@ public class WeatherActivity extends AppCompatActivity {
         sport_text=findViewById(R.id.sport_text);
         bing_pic_img=findViewById(R.id.bing_pic_img);
         appClient= (AppClient) getApplication();
+        swipe_refresh=findViewById(R.id.swipe_refresh);
+        swipe_refresh.setColorSchemeResources(R.color.colorPrimary);
+        nav_button=findViewById(R.id.nav_button);
+        drawer_layout=findViewById(R.id.drawer_layout);
+    }
+    private void setListener(){
+        swipe_refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                requestWeather(mWeatherId);
+            }
+        });
+        nav_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                drawer_layout.openDrawer(GravityCompat.START);
+            }
+        });
     }
     private void DisplayPic(){
         View decorView=getWindow().getDecorView();
@@ -103,21 +130,22 @@ public class WeatherActivity extends AppCompatActivity {
         if (weatherString!=null){
             //有缓存时直接解析天气数据
             Weather weather= Utility.handleWeatherResponse(weatherString);
+            mWeatherId=weather.basic.weatherId;
             showWeatherInfo(weather);
         }else {
             //无缓存时去服务器查询天气
-            String weatherId=getIntent().getStringExtra("weather_id");
+            mWeatherId=getIntent().getStringExtra("weather_id");
             /**
              *如何优雅地getIntent？？？
              * **/
             weather_layout.setVisibility(View.GONE);
-            requestWeather(weatherId);
+            requestWeather(mWeatherId);
         }
     }
     /**
      * 根据天气id请求城市天气信息
      * */
-    private void requestWeather(String weatherId){
+    public void requestWeather(String weatherId){
         String key="9af04bbcb8cf4190a670075979abe59a";
         String weatherUrl="weather?cityid="+weatherId+"&key="+key;
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
@@ -127,6 +155,7 @@ public class WeatherActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                        Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
+                        swipe_refresh.setRefreshing(false);
 
                     }
                 });
@@ -141,10 +170,12 @@ public class WeatherActivity extends AppCompatActivity {
                     public void run() {
                         if (weather!=null&&weather.status.equals("ok")){
                             appClient.setWeather(responseText);
+                            mWeatherId=weather.basic.weatherId;
                             showWeatherInfo(weather);
                         }else {
                             Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
                         }
+                        swipe_refresh.setRefreshing(false);
                     }
                 });
             }
