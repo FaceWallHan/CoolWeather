@@ -99,6 +99,9 @@ public class ChooseAreaFragment extends Fragment {
                         break;
                     case LEVEL_COUNTY:
                        String weatherId=countyList.get(i).getWeatherId();
+                       /**
+                        * instanceof用来判断一个对象是否属于某个类的实例
+                        * **/
                        if (getActivity() instanceof MainActivity){
                            Intent intent=new Intent(getActivity(),WeatherActivity.class);
                            intent.putExtra("weather_id",weatherId);
